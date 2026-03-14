@@ -5,7 +5,7 @@ const bot = new TelegramBot("8631868074:AAFcC5P0Hc1_E3ImaIIIMKITYWY4MotK3hI", { 
 
 const genAI = new GoogleGenerativeAI("AIzaSyDkZDAWc7BbMeilB-oog5Qqs0QA72w3Vt0");
 
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
 bot.on("message", async (msg) => {
 
