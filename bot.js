@@ -1,29 +1,42 @@
 const TelegramBot = require("node-telegram-bot-api");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-const bot = new TelegramBot("8631868074:AAFcC5P0Hc1_E3ImaIIIMKITYWY4MotK3hI", { polling: true });
+// Telegram Bot
+const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
 
-const genAI = new GoogleGenerativeAI("AIzaSyDkZDAWc7BbMeilB-oog5Qqs0QA72w3Vt0");
+// Gemini AI
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY);
 
-const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+const model = genAI.getGenerativeModel({
+  model: "gemini-1.5-flash-latest"
+});
 
+// Message listener
 bot.on("message", async (msg) => {
 
-if (!msg.text) return;
+  const chatId = msg.chat.id;
 
-try {
+  // text না থাকলে ignore
+  if (!msg.text) return;
 
-const result = await model.generateContent(msg.text);
+  const userText = msg.text;
 
-const reply = result.response.text();
+  try {
 
-bot.sendMessage(msg.chat.id, reply);
+    const result = await model.generateContent(userText);
 
-} catch (error) {
+    const response = await result.response;
 
-console.log(error);
-bot.sendMessage(msg.chat.id,"AI error");
+    const reply = response.text();
 
-}
+    bot.sendMessage(chatId, reply);
+
+  } catch (error) {
+
+    console.log("Gemini Error:", error);
+
+    bot.sendMessage(chatId, "AI error");
+
+  }
 
 });
