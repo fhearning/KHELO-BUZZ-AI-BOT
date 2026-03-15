@@ -6,7 +6,7 @@ const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY);
 
 const model = genAI.getGenerativeModel({
-  model: "gemini-2.5-pro"
+  model: "gemini-2.5-flash"
 });
 
 bot.on("message", async (msg) => {
