@@ -4,59 +4,37 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 const bot = new TelegramBot(process.env.BOT_TOKEN);
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY);
 
-const model = genAI.getGenerativeModel({
-  model: "gemini-2.5-flash"
-});
-
 export default async function handler(req, res) {
 
   if (req.method !== "POST") {
     return res.status(200).send("Bot running");
   }
 
-  const msg = req.body.message;
+  const update = req.body;
 
-  if (!msg || !msg.text) {
+  if (!update.message) {
     return res.status(200).send("ok");
   }
 
-  const chatId = msg.chat.id;
-  const text = msg.text;
+  const chatId = update.message.chat.id;
+  const text = update.message.text;
 
-  let reply = "";
+  try {
 
-  // start command
-  if (text.toLowerCase() === "/start") {
-    reply = "Welcome to KHELO BUZZ AI BOT 🙂\n\nAsk me anything about Khelo Buzz.";
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash"
+    });
+
+    const result = await model.generateContent(text);
+
+    const reply = result.response.text();
+
+    await bot.sendMessage(chatId, reply);
+
+  } catch (e) {
+
+    await bot.sendMessage(chatId, "AI error");
   }
 
-  // bad word filter
-  const badWords = ["fuck","madarchod","maderchod","kutta"];
-
-  if (badWords.some(w => text.toLowerCase().includes(w))) {
-    reply = "Please use respectful language 🙂";
-  }
-
-  // AI reply
-  if (!reply) {
-
-    const systemPrompt = `
-You are KHELO BUZZ AI BOT.
-
-Rules:
-- Help users about Khelo Buzz app
-- Answer in Bangla or English
-- Be polite
-- If user uses bad language warn them
-- Help with topup, withdraw, match issues
-`;
-
-    const result = await model.generateContent(systemPrompt + "\nUser: " + text);
-
-    reply = result.response.text();
-  }
-
-  await bot.sendMessage(chatId, reply);
-
-  res.status(200).send("ok");
+  return res.status(200).send("ok");
 }
