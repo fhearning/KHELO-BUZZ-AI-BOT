@@ -4,14 +4,14 @@ const app = express();
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.send("Server running");
+  res.send("Bot running");
 });
 
 app.post("/bot", (req, res) => {
 
-  console.log("Webhook received:", req.body);
+  console.log(req.body);
 
-  res.status(200).send("ok");
+  res.sendStatus(200);
 
 });
 
