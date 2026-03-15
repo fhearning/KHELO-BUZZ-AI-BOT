@@ -4,37 +4,47 @@ export default async function handler(req, res) {
     return res.status(200).send("Bot running");
   }
 
-  try {
+  const update = req.body;
 
-    const update = req.body;
+  if (!update.message) {
+    return res.status(200).send("ok");
+  }
 
-    if (!update.message) {
-      return res.status(200).send("ok");
-    }
+  const chatId = update.message.chat.id;
+  const text = update.message.text || "";
 
-    const chatId = update.message.chat.id;
-    const text = update.message.text || "";
-
-    const reply = "Echo: " + text;
-
-    await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, {
+  const gemini = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_KEY}`,
+    {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        chat_id: chatId,
-        text: reply
+        contents: [
+          {
+            parts: [{ text }]
+          }
+        ]
       })
-    });
+    }
+  );
 
-    return res.status(200).send("ok");
+  const data = await gemini.json();
 
-  } catch (err) {
+  const reply =
+    data?.candidates?.[0]?.content?.parts?.[0]?.text || "AI error";
 
-    console.log(err);
-    return res.status(200).send("ok");
+  await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text: reply
+    })
+  });
 
-  }
-
+  return res.status(200).send("ok");
 }
