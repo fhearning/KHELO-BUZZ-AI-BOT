@@ -1,7 +1,11 @@
 const TelegramBot = require("node-telegram-bot-api");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const express = require("express");
 
-const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
+const app = express();
+app.use(express.json());
+
+const bot = new TelegramBot(process.env.BOT_TOKEN);
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY);
 
@@ -9,28 +13,27 @@ const model = genAI.getGenerativeModel({
   model: "gemini-2.5-flash"
 });
 
-bot.on("message", async (msg) => {
+app.post("/bot", async (req, res) => {
 
-  if (!msg.text) return;
+  const msg = req.body.message;
 
-  const chatId = msg.chat.id;
-  const userText = msg.text;
+  if (!msg || !msg.text) return res.sendStatus(200);
 
   try {
 
-    const result = await model.generateContent(userText);
+    const result = await model.generateContent(msg.text);
+    const reply = result.response.text();
 
-    const response = await result.response;
+    await bot.sendMessage(msg.chat.id, reply);
 
-    const reply = response.text();
+  } catch (e) {
 
-    bot.sendMessage(chatId, reply);
-
-  } catch (error) {
-
-    console.log(error);
-    bot.sendMessage(chatId,"AI error");
+    await bot.sendMessage(msg.chat.id, "AI error");
 
   }
 
+  res.sendStatus(200);
+
 });
+
+app.listen(process.env.PORT || 3000);
