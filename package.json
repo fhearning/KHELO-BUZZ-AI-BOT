@@ -1,9 +1,10 @@
 {
-  "name": "khelo-buzz-ai-bot",
+  "name": "telegram-gemini-bot",
   "version": "1.0.0",
   "main": "bot.js",
   "dependencies": {
     "node-telegram-bot-api": "^0.61.0",
-    "@google/generative-ai": "^0.11.3"
+    "@google/generative-ai": "^0.11.3",
+    "express": "^4.19.2"
   }
 }
