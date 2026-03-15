@@ -7,38 +7,32 @@ app.use(express.json());
 
 const bot = new TelegramBot(process.env.BOT_TOKEN);
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-const model = genAI.getGenerativeModel({
-  model: "gemini-2.5-flash"
+// health check
+app.get("/", (req, res) => {
+  res.send("Bot running");
 });
 
+// Telegram webhook
 app.post("/bot", async (req, res) => {
+  res.sendStatus(200); // Telegram কে সাথে সাথে OK দিতে হবে
+
   try {
+    const msg = req.body.message;
+    if (!msg || !msg.text) return;
 
-    const update = req.body;
-
-    if (!update.message || !update.message.text) {
-      return res.sendStatus(200);
-    }
-
-    const chatId = update.message.chat.id;
-    const text = update.message.text;
+    const chatId = msg.chat.id;
+    const text = msg.text;
 
     const result = await model.generateContent(text);
     const reply = result.response.text();
 
     await bot.sendMessage(chatId, reply);
 
-    res.sendStatus(200);
-
   } catch (err) {
-    console.log(err);
-    res.sendStatus(200); // Telegram কে সবসময় 200 দিতে হবে
+    console.log("AI Error:", err);
   }
-});
-
-app.get("/", (req, res) => {
-  res.send("Bot running");
 });
 
 app.listen(process.env.PORT || 3000, () => {
