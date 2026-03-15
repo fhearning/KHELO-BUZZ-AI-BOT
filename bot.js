@@ -13,30 +13,32 @@ const model = genAI.getGenerativeModel({
 });
 
 app.post("/bot", async (req, res) => {
-
-  const update = req.body;
-
-  console.log("Telegram update:", update);
-
-  if (!update.message || !update.message.text) {
-    return res.sendStatus(200);
-  }
-
-  const chatId = update.message.chat.id;
-  const text = update.message.text;
-
   try {
+
+    const update = req.body;
+
+    if (!update.message || !update.message.text) {
+      return res.sendStatus(200);
+    }
+
+    const chatId = update.message.chat.id;
+    const text = update.message.text;
+
     const result = await model.generateContent(text);
     const reply = result.response.text();
 
     await bot.sendMessage(chatId, reply);
 
-  } catch (error) {
-    console.log(error);
-    await bot.sendMessage(chatId, "AI error");
-  }
+    res.sendStatus(200);
 
-  res.sendStatus(200);
+  } catch (err) {
+    console.log(err);
+    res.sendStatus(200); // Telegram কে সবসময় 200 দিতে হবে
+  }
+});
+
+app.get("/", (req, res) => {
+  res.send("Bot running");
 });
 
 app.listen(process.env.PORT || 3000, () => {
