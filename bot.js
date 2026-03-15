@@ -1,10 +1,10 @@
-const TelegramBot = require("node-telegram-bot-api");
 const express = require("express");
+const fetch = require("node-fetch");
 
 const app = express();
 app.use(express.json());
 
-const bot = new TelegramBot(process.env.BOT_TOKEN);
+const TOKEN = process.env.BOT_TOKEN;
 
 app.get("/", (req, res) => {
   res.send("Bot running");
@@ -16,19 +16,27 @@ app.post("/bot", async (req, res) => {
 
   try {
 
-    const update = req.body;
+    const msg = req.body.message;
+    if (!msg) return;
 
-    if (!update.message) return;
+    const chatId = msg.chat.id;
+    const text = msg.text || "";
 
-    const chatId = update.message.chat.id;
-    const text = update.message.text;
+    const reply = "Echo: " + text;
 
-    console.log("MSG:", text);
-
-    await bot.sendMessage(chatId, "Test reply: " + text);
+    await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: reply
+      })
+    });
 
   } catch (err) {
-    console.log("ERROR:", err);
+    console.log(err);
   }
 
 });
