@@ -25,21 +25,23 @@ const model = genAI.getGenerativeModel({
 model: "gemini-2.5-flash"
 });
 
-// AI intent detection
 const classifyPrompt = `
-এই মেসেজটি কোন ধরনের সমস্যা তা নির্ধারণ করুন।
+তুমি একটি support message classifier।
 
-category:
+User message টি নিচের কোন category তে পড়ে তা নির্ধারণ করো।
+
 deposit_problem
 withdraw_problem
 result_problem
-scam_warning
 general_question
 
-message:
+গুরুত্বপূর্ণ নিয়ম:
+যদি নিশ্চিত না হও তাহলে general_question দিবে।
+
+User message:
 ${text}
 
-শুধু category name লিখুন।
+শুধু category নাম লিখবে।
 `;
 
 const classify = await model.generateContent(classifyPrompt);
@@ -47,8 +49,8 @@ const classify = await model.generateContent(classifyPrompt);
 const intent = classify.response.text().trim().toLowerCase();
 
 
-// Deposit problem
-if (intent.includes("deposit_problem")) {
+// deposit problem
+if (intent === "deposit_problem") {
 
 reply = `দয়া করে আপনার Transaction ID এবং payment screenshot শুধুমাত্র অফিসিয়াল সাপোর্টে পাঠান।
 
@@ -58,45 +60,31 @@ reply = `দয়া করে আপনার Transaction ID এবং payment
 
 }
 
-// Withdraw problem
-else if (intent.includes("withdraw_problem")) {
+// withdraw problem
+else if (intent === "withdraw_problem") {
 
 reply = `Withdraw সাধারণত 2 থেকে 4 ঘন্টার মধ্যে দেওয়া হয়।
 
 যদি এখনো না পান তাহলে কিছু সময় অপেক্ষা করুন অথবা সাপোর্টে যোগাযোগ করুন।
 
 Minimum withdraw: 55 টাকা
-Method: Bkash / Nagad / Rocket
 
 সাপোর্ট: @khelobuzz_support`;
 
 }
 
-// Match result problem
-else if (intent.includes("result_problem")) {
+// result problem
+else if (intent === "result_problem") {
 
 reply = `ম্যাচ শেষ হওয়ার 10-15 মিনিটের মধ্যে result দেওয়া হয়।
 
 যদি result না আসে তাহলে:
 
-১️⃣ Winning screenshot  
-২️⃣ Game ID name  
-৩️⃣ Match details  
+১️⃣ Winning screenshot
+২️⃣ Game ID name
+৩️⃣ Match details
 
 এই তথ্যগুলো সাপোর্টে পাঠান।
-
-সাপোর্ট: @khelobuzz_support`;
-
-}
-
-// Scam warning
-else if (intent.includes("scam_warning")) {
-
-reply = `⚠️ সতর্কতা
-
-কখনো আপনার Transaction ID বা payment screenshot কাউকে দিবেন না।
-
-শুধুমাত্র অফিসিয়াল সাপোর্টে দিবেন।
 
 সাপোর্ট: @khelobuzz_support`;
 
@@ -106,12 +94,11 @@ reply = `⚠️ সতর্কতা
 else {
 
 const systemPrompt = `
-আপনি KHELO BUZZ AI BOT।
+তুমি KHELO BUZZ AI BOT।
 
-গুরুত্বপূর্ণ নিয়ম:
-সবসময় বাংলায় উত্তর দিবেন।
+সবসময় বাংলায় উত্তর দিবে।
 
-KHELO BUZZ একটি Free Fire Tournament প্ল্যাটফর্ম।
+KHELO BUZZ একটি Free Fire Tournament প্ল্যাটফর্ম যেখানে user ম্যাচ খেলে ইনকাম করতে পারে।
 
 Website:
 https://khelobuzz.live
@@ -119,17 +106,13 @@ https://khelobuzz.live
 Top up website:
 https://khelo-top-up.vercel.app
 
-User এখানে ম্যাচ খেলে ইনকাম করতে পারে।
-
 Withdraw:
 Minimum withdraw 55 টাকা
 Method: Bkash / Nagad / Rocket
-Time: সাধারণত 2-4 ঘন্টার মধ্যে।
+Time: 2-4 ঘন্টা।
 
-Support Telegram:
+Support:
 @khelobuzz_support
-
-কখনো Transaction ID বা payment screenshot পাবলিক গ্রুপে দিতে বলবেন না।
 `;
 
 const result = await model.generateContent(systemPrompt + "\nUser: " + text);
@@ -140,7 +123,7 @@ reply = result.response.text();
 
 } catch (e) {
 
-reply = "দয়া করে সাপোর্টের সাথে যোগাযোগ করুন: @khelobuzz_support";
+reply = "দয়া করে সাপোর্টে যোগাযোগ করুন: @khelobuzz_support";
 
 }
 
